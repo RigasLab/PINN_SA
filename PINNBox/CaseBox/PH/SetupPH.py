@@ -66,18 +66,7 @@ def setupPH(pde_type="HD",fpList=[True,-0.0110],SA=[True, 1e-10], massflow=[Fals
     #############################################################
 
     global X_test
-    #[_,_,_,X_test,Q_test,tau_test] = loadQ0("InputData/DNS/XDE",10,5,refineUpper,removeUpper)
-    X_test = np.ones((100,2))
-
-    nx = 10
-    ny = 10 # change to 100
-    x = np.linspace(-4.5, 4.5, nx)
-    y = np.linspace(0.0, 3.036, ny)
-    X, Y = np.meshgrid(x, y)
-
-    X_test = np.hstack((X.flatten()[:, None], Y.flatten()[:, None]))
-    Q_test = np.ones((100,3))
-    tau_test = np.ones((100,3))
+    [_,_,_,X_test,Q_test,tau_test] = loadQ0("InputData/DNS/XDE",10,5,refineUpper,removeUpper)
     
     bc = genBC(domain, pde_type, doSA, domdot, Nmdot, [X_test,Q_test,tau_test], resolution)
 
@@ -137,6 +126,30 @@ def getTrainingData(X_test, Q_test, tau_test, resolution):
     elif(resolution == '1p0'):
        nX = "10"
        nY = "4"
+    elif(resolution == '0p2'):
+       nX = "46"
+       nY = "16"
+    elif(resolution == '0p1'):
+       nX = "91"
+       nY = "31"
+    elif(resolution == '0p05'):
+       nX = "181"
+       nY = "61"
+    elif(resolution == '0p01'):
+       nX = "901"
+       nY = "301"
+    elif(resolution == '0p8_b'):
+       resolution = "0p8"
+       nX = "12"
+       nY = "4_bottom"
+    elif(resolution == '0p8_c'):
+       resolution = "0p8"
+       nX = "12"
+       nY = "4_centre"
+    elif(resolution == '0p8_t'):
+       resolution = "0p8"
+       nX = "12"
+       nY = "4_top"
     else:
         resolution = '0p5'
         nX = "19"
