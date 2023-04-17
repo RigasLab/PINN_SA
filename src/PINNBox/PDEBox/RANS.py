@@ -6,7 +6,33 @@ from deepxde.backend import tf
 ###################################################################################
 #RANS_B_RST-E
 def RANS_B_RSTE(rho,nu,fp):
+    """
+    Return PDE for RANS with RST-E formulation.
+
+    :param rho: Fluid Density.
+    :type rho: float
+    :param nu: Fluid Kinematic Viscosity.
+    :type nu: float
+    :param fp: Streamwise Body Forcing.
+    :type fp: float or tf.Variable
+    :return: PDE operator to calculate residual of continuity, x-momentum and y-momentum
+    :rtype: func
+
+    """
     def pde(X,Q,D):
+        """
+        Returns PDE loss for RST-E formulation.
+
+        :param X: Coordinates to evaluate residual error.
+        :type X: numpy or tf.Tensor
+        :param Q: Corresponding mean flow variables.
+        :type Q: numpy or tf.Tensor
+        :param D: Auxillar variable corresponding to wall distance.
+        :type D: None or numpy or tf.Tensor
+        :return: PDE loss corresponding with X for continuity, x-momentum and y-momentum
+        :rtype: list
+
+        """
         U       = Q[:,0:1]
         V       = Q[:,1:2]
         P       = Q[:,2:3]
@@ -47,7 +73,33 @@ def RANS_B_RSTE(rho,nu,fp):
 ###################################################################################
 #RANS_B_HD
 def RANS_B_HD(rho,nu,fp):
+    """
+    Return PDE for RANS with HD formulation and no turbulence model.
+
+    :param rho: Fluid Density.
+    :type rho: float
+    :param nu: Fluid Kinematic Viscosity.
+    :type nu: float
+    :param fp: Streamwise Body Forcing.
+    :type fp: float or tf.Variable
+    :return: PDE operator to calculate residual of continuity, x-momentum, y-momentum and divergence of solenoidal forcing.
+    :rtype: func
+
+    """
     def pde(X,Q,D):
+        """
+        Returns PDE loss for HD formulation (without Spalart-Allmaras)
+
+        :param X: Coordinates to evaluate residual error.
+        :type X: numpy or tf.Tensor
+        :param Q: Corresponding mean flow variables.
+        :type Q: numpy or tf.Tensor
+        :param D: Auxillar variable corresponding to wall distance.
+        :type D: None or numpy or tf.Tensor
+        :return: PDE loss corresponding with X for continuity, x-momentumm, y-momentum and divergence of solenoidal forcing.
+        :rtype: list
+
+        """
         U       = Q[:,0:1]
         V       = Q[:,1:2]
         Pphi    = Q[:,2:3]
@@ -85,6 +137,21 @@ def RANS_B_HD(rho,nu,fp):
 ###################################################################################
 ##RANS_SA_HD
 def RANS_SA_HD(rho,nu,minS,fp):
+    """
+    Return PDE for RANS with HD formulation and Spalart-Allmaras turbulence model.
+
+    :param rho: Fluid Density.
+    :type rho: float
+    :param nu: Fluid Kinematic Viscosity.
+    :type nu: float
+    :param minS: Minimum value of mean strain rate tensor to prevent division by 0.
+    :type minS: float
+    :param fp: Streamwise Body Forcing.
+    :type fp: float or tf.Variable
+    :return: PDE operator to calculate residual of continuity, x-momentum, y-momentum, divergence of solenoidal forcing, Spalart-Allmaras transport equation and L2 norm of solenoidal forcing.
+    :rtype: func
+
+    """
     cv1 = 7.1
     cv2 = 0.7
     cv3 = 0.9
@@ -103,6 +170,19 @@ def RANS_SA_HD(rho,nu,minS,fp):
     M = 1e-5
 
     def pde(X,Q,D):
+        """
+        Returns PDE loss for HD formulation (with Spalart-Allmaras)
+
+        :param X: Coordinates to evaluate residual error.
+        :type X: numpy or tf.Tensor
+        :param Q: Corresponding mean flow variables.
+        :type Q: numpy or tf.Tensor
+        :param D: Auxillar variable corresponding to wall distance.
+        :type D: None or numpy or tf.Tensor
+        :return: PDE loss corresponding with X for continuity, x-momentumm, y-momentum, divergence of solenoidal forcing, Spalart-Allmaras transport equation and L2 norm of solenoidal forcing.
+        :rtype: list
+
+        """
         U       = Q[:,0:1]
         V       = Q[:,1:2]
         Pphi    = Q[:,2:3]
@@ -195,6 +275,19 @@ def RANS_SA_HD(rho,nu,minS,fp):
 ########################################################################
 ########################################################################
 def getSATerms(rho,nu,dmin=1e-5):
+    """
+    Return function to evaluate teerms in SA model.
+
+    :param rho: Fluid Density.
+    :type rho: float
+    :param nu: Fluid Kinematic Viscosity.
+    :type nu: float
+    :param dmin: Minimum value of wall distance for blend function.
+    :type dmin: float
+    :return: Operator to calculate production, destruction, diffusion and cross-diffusion terms.
+    :rtype: func
+
+    """
     cv1 = 7.1
     cv2 = 0.7
     cv3 = 0.9
@@ -288,13 +381,40 @@ def getSATerms(rho,nu,dmin=1e-5):
 ########################################################################
 @tf.function
 def tf_Stilde(rn):
-        rdash = tf.where(rn < 0.0, tf_rlim(rn), rn)
-        return tf_rtrue(rdash)
+    """
+    Evaluate value of r.
+
+    :param rn: provisional value of r.
+    :type rn: numpy or tf.Tensor
+    :return: Final value of r capped between 0 and 10.
+    :rtype: numpy or tf.Tensor
+
+    """
+    rdash = tf.where(rn < 0.0, tf_rlim(rn), rn)
+    return tf_rtrue(rdash)
 
 @tf.function   
 def tf_rlim(rn):
+    """
+    Return limiting value of r.
+
+    :param rn: provisional value of r.
+    :type rn: numpy or tf.Tensor
+    :return: Maximum value of r (10).
+    :rtype: numpy or tf.Tensor
+
+    """
     return 10.0*tf.ones(shape=tf.shape(rn),dtype = tf.dtypes.as_dtype(dde.config.default_float()))
 
 @tf.function
 def tf_rtrue(rn):
+    """
+    Return the minumimum between r and limiting value of r.
+
+    :param rn: provisional value of r.
+    :type rn: numpy or tf.Tensor
+    :return: Minimum value of r between pn and limiting value.
+    :rtype: numpy or tf.Tensor
+
+    """
     return tf.math.minimum(rn,tf_rlim(rn))

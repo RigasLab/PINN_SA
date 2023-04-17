@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Welcome to PINN_SA’s documentation! &#8212; PINN-SA 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-pinn-sa-s-documentation">
+<h1>Welcome to PINN_SA’s documentation!<a class="headerlink" href="#welcome-to-pinn-sa-s-documentation" title="Permalink to this heading">¶</a></h1>
+<p>This directory presents an implementation of DeepXDE package which allows changing problem setup from a single config file. This allows the case, hyperparameters and other parameters to be changed with a single file. This code was used for the work XXXX, which solves the inverse problem for the mean flow RANS equations.</p>
+<p><strong>Documentation</strong>: xxx</p>
+<img alt="_images/pinn.png" src="_images/pinn.png" />
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h2>
+<p>This code has the ability to chnage many parameters such as:
+- changing architecture (nodes and layers), activation functions and learning rate
+- changing the weights of individual loss components
+- changing the PDE for the problem
+- changing the individual case
+- changing number of iterations and convergence criteria</p>
+<p>Check out the <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> section for further information, including how to
+<a class="reference internal" href="usage.html#installation"><span class="std std-ref">install</span></a> the project.</p>
+</section>
+<section id="user-guide">
+<h2>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Installation Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#creating-recipes">Creating recipes</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Example Cases:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demos/examples.PH.html">Examples - Periodic Hill</a></li>
+</ul>
+</div>
+</section>
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/lumache.html">lumache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/src.PINNBox.BaseFunctions.html">src.PINNBox.BaseFunctions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BaseFunctions.html">BaseFunctions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.BaseFunctions.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNFunctions.html">PINNFunctions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.PINNFunctions.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNPlotter.html">BaseFunctions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.PINNPlotter.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PDEBox.html">PDEBox</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.PDEBox.html#reynolds-averaged-navier-stokes-rans-equations">Reynolds-Averaged Navier Stokes(RANS) equations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html">CaseBox</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html#general-loader">General Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html#periodic-hill">Periodic Hill</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BC.html">BC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/src.PINNBox.BC.html#mass-flow-rate-bc">Mass Flow Rate BC</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">PINN-SA</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Installation Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Example Cases:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demos/examples.PH.html">Examples - Periodic Hill</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BaseFunctions.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNFunctions.html">PINNFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNPlotter.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PDEBox.html">PDEBox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html">CaseBox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BC.html">BC</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="usage.html" title="next chapter">Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Yusuf Patel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

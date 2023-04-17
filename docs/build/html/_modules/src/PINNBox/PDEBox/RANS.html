@@ -1,0 +1,533 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>src.PINNBox.PDEBox.RANS &#8212; PINN-SA 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for src.PINNBox.PDEBox.RANS</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">deepxde</span> <span class="k">as</span> <span class="nn">dde</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">deepxde.backend</span> <span class="kn">import</span> <span class="n">tf</span>
+<span class="c1">###################################################################################</span>
+<span class="c1">###################################################################################</span>
+<span class="c1">#RANS_B_RST-E</span>
+<div class="viewcode-block" id="RANS_B_RSTE"><a class="viewcode-back" href="../../../../modules/src.PINNBox.PDEBox.html#src.PINNBox.PDEBox.RANS.RANS_B_RSTE">[docs]</a><span class="k">def</span> <span class="nf">RANS_B_RSTE</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return PDE for RANS with RST-E formulation.</span>
+
+<span class="sd">    :param rho: Fluid Density.</span>
+<span class="sd">    :type rho: float</span>
+<span class="sd">    :param nu: Fluid Kinematic Viscosity.</span>
+<span class="sd">    :type nu: float</span>
+<span class="sd">    :param fp: Streamwise Body Forcing.</span>
+<span class="sd">    :type fp: float or tf.Variable</span>
+<span class="sd">    :return: PDE operator to calculate residual of continuity, x-momentum and y-momentum</span>
+<span class="sd">    :rtype: func</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">pde</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns PDE loss for RST-E formulation.</span>
+
+<span class="sd">        :param X: Coordinates to evaluate residual error.</span>
+<span class="sd">        :type X: numpy or tf.Tensor</span>
+<span class="sd">        :param Q: Corresponding mean flow variables.</span>
+<span class="sd">        :type Q: numpy or tf.Tensor</span>
+<span class="sd">        :param D: Auxillar variable corresponding to wall distance.</span>
+<span class="sd">        :type D: None or numpy or tf.Tensor</span>
+<span class="sd">        :return: PDE loss corresponding with X for continuity, x-momentum and y-momentum</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">U</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">V</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">P</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="n">uu</span>      <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">uv</span>      <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">vv</span>      <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Ux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Px</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Py</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Uxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">uux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">uvy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">uvx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">vvy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#####################################################</span>
+        <span class="c1">#####################################################</span>
+        <span class="n">cont</span>  <span class="o">=</span> <span class="n">Ux</span> <span class="o">+</span> <span class="n">Vy</span>
+        <span class="n">xmom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Ux</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Uy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Px</span> <span class="o">-</span> <span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="n">Uxx</span> <span class="o">+</span> <span class="n">Uyy</span><span class="p">)</span> <span class="o">+</span> <span class="n">uux</span> <span class="o">+</span> <span class="n">uvy</span> <span class="o">+</span> <span class="n">fp</span>
+        <span class="n">ymom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Vx</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Vy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Py</span> <span class="o">-</span> <span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="n">Vxx</span> <span class="o">+</span> <span class="n">Vyy</span><span class="p">)</span> <span class="o">+</span> <span class="n">uvx</span> <span class="o">+</span> <span class="n">vvy</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">cont</span><span class="p">,</span> <span class="n">xmom</span><span class="p">,</span> <span class="n">ymom</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pde</span></div>
+<span class="c1">###################################################################################</span>
+<span class="c1">###################################################################################</span>
+<span class="c1">#RANS_B_HD</span>
+<div class="viewcode-block" id="RANS_B_HD"><a class="viewcode-back" href="../../../../modules/src.PINNBox.PDEBox.html#src.PINNBox.PDEBox.RANS.RANS_B_HD">[docs]</a><span class="k">def</span> <span class="nf">RANS_B_HD</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return PDE for RANS with HD formulation and no turbulence model.</span>
+
+<span class="sd">    :param rho: Fluid Density.</span>
+<span class="sd">    :type rho: float</span>
+<span class="sd">    :param nu: Fluid Kinematic Viscosity.</span>
+<span class="sd">    :type nu: float</span>
+<span class="sd">    :param fp: Streamwise Body Forcing.</span>
+<span class="sd">    :type fp: float or tf.Variable</span>
+<span class="sd">    :return: PDE operator to calculate residual of continuity, x-momentum, y-momentum and divergence of solenoidal forcing.</span>
+<span class="sd">    :rtype: func</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">pde</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns PDE loss for HD formulation (without Spalart-Allmaras)</span>
+
+<span class="sd">        :param X: Coordinates to evaluate residual error.</span>
+<span class="sd">        :type X: numpy or tf.Tensor</span>
+<span class="sd">        :param Q: Corresponding mean flow variables.</span>
+<span class="sd">        :type Q: numpy or tf.Tensor</span>
+<span class="sd">        :param D: Auxillar variable corresponding to wall distance.</span>
+<span class="sd">        :type D: None or numpy or tf.Tensor</span>
+<span class="sd">        :return: PDE loss corresponding with X for continuity, x-momentumm, y-momentum and divergence of solenoidal forcing.</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">U</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">V</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">Pphi</span>    <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        
+        <span class="n">fsu</span>     <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">fsv</span>     <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Ux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Pphix</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Pphiy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">fsux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">fsvy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Uxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#####################################################</span>
+        <span class="c1">#####################################################</span>
+        <span class="n">cont</span>  <span class="o">=</span> <span class="n">Ux</span> <span class="o">+</span> <span class="n">Vy</span>
+        <span class="n">xmom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Ux</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Uy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Pphix</span> <span class="o">-</span> <span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="n">Uxx</span> <span class="o">+</span> <span class="n">Uyy</span><span class="p">)</span> <span class="o">-</span> <span class="n">fsu</span> <span class="o">+</span> <span class="n">fp</span>
+        <span class="n">ymom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Vx</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Vy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Pphiy</span> <span class="o">-</span> <span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="n">Vxx</span> <span class="o">+</span> <span class="n">Vyy</span><span class="p">)</span> <span class="o">-</span> <span class="n">fsv</span>
+        <span class="n">divfs</span> <span class="o">=</span> <span class="n">fsux</span> <span class="o">+</span> <span class="n">fsvy</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">cont</span><span class="p">,</span> <span class="n">xmom</span><span class="p">,</span> <span class="n">ymom</span><span class="p">,</span> <span class="n">divfs</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pde</span></div>
+<span class="c1">###################################################################################</span>
+<span class="c1">###################################################################################</span>
+<span class="c1">##RANS_SA_HD</span>
+<div class="viewcode-block" id="RANS_SA_HD"><a class="viewcode-back" href="../../../../modules/src.PINNBox.PDEBox.html#src.PINNBox.PDEBox.RANS.RANS_SA_HD">[docs]</a><span class="k">def</span> <span class="nf">RANS_SA_HD</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">minS</span><span class="p">,</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return PDE for RANS with HD formulation and Spalart-Allmaras turbulence model.</span>
+
+<span class="sd">    :param rho: Fluid Density.</span>
+<span class="sd">    :type rho: float</span>
+<span class="sd">    :param nu: Fluid Kinematic Viscosity.</span>
+<span class="sd">    :type nu: float</span>
+<span class="sd">    :param minS: Minimum value of mean strain rate tensor to prevent division by 0.</span>
+<span class="sd">    :type minS: float</span>
+<span class="sd">    :param fp: Streamwise Body Forcing.</span>
+<span class="sd">    :type fp: float or tf.Variable</span>
+<span class="sd">    :return: PDE operator to calculate residual of continuity, x-momentum, y-momentum, divergence of solenoidal forcing, Spalart-Allmaras transport equation and L2 norm of solenoidal forcing.</span>
+<span class="sd">    :rtype: func</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cv1</span> <span class="o">=</span> <span class="mf">7.1</span>
+    <span class="n">cv2</span> <span class="o">=</span> <span class="mf">0.7</span>
+    <span class="n">cv3</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+    <span class="n">kep</span> <span class="o">=</span> <span class="mf">0.41</span> 
+
+    <span class="n">cb1</span> <span class="o">=</span> <span class="mf">0.1355</span>
+    <span class="n">cb2</span> <span class="o">=</span> <span class="mf">0.622</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span>
+
+    <span class="n">cw1</span> <span class="o">=</span> <span class="p">(</span><span class="n">cb1</span><span class="o">/</span><span class="p">(</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">cb2</span><span class="p">)</span><span class="o">/</span><span class="n">sig</span>
+    <span class="n">cw2</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">cw3</span> <span class="o">=</span> <span class="mf">2.0</span>
+    <span class="n">rlim</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="mf">1e-5</span>
+
+    <span class="k">def</span> <span class="nf">pde</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">D</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns PDE loss for HD formulation (with Spalart-Allmaras)</span>
+
+<span class="sd">        :param X: Coordinates to evaluate residual error.</span>
+<span class="sd">        :type X: numpy or tf.Tensor</span>
+<span class="sd">        :param Q: Corresponding mean flow variables.</span>
+<span class="sd">        :type Q: numpy or tf.Tensor</span>
+<span class="sd">        :param D: Auxillar variable corresponding to wall distance.</span>
+<span class="sd">        :type D: None or numpy or tf.Tensor</span>
+<span class="sd">        :return: PDE loss corresponding with X for continuity, x-momentumm, y-momentum, divergence of solenoidal forcing, Spalart-Allmaras transport equation and L2 norm of solenoidal forcing.</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">U</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">V</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">Pphi</span>    <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        
+        <span class="n">nutilde</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>   
+        <span class="n">fsu</span>     <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">fsv</span>     <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Ux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Pphix</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Pphiy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">nutildex</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nutildey</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">fsux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">fsvy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Uxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vxx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">Vyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">nutildexx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nutildeyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#####################################################</span>
+        <span class="c1">#####################################################</span>
+        <span class="n">dn</span> <span class="o">=</span> <span class="n">D</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dn</span><span class="p">,</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nutilde</span><span class="p">))</span>
+        <span class="n">dsqr</span> <span class="o">=</span> <span class="n">d</span><span class="o">*</span><span class="n">d</span>
+        <span class="c1">############################</span>
+        <span class="n">chi</span> <span class="o">=</span> <span class="n">nutilde</span><span class="o">/</span><span class="n">nu</span>
+
+        <span class="n">fv1</span> <span class="o">=</span> <span class="p">(</span><span class="n">chi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">chi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">cv1</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">nut</span> <span class="o">=</span> <span class="n">fv1</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nutilde</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dde</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">())),</span> <span class="n">nutilde</span><span class="p">)</span>
+
+        <span class="n">nutx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">nut</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nuty</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">nut</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">###################################################     </span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">nu</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">chi</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">chi</span><span class="p">))</span>
+
+        <span class="n">etax</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">etay</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">vorZ</span> <span class="o">=</span> <span class="n">Vx</span> <span class="o">-</span> <span class="n">Uy</span>
+        <span class="n">Sdash</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vorZ</span><span class="o">*</span><span class="n">vorZ</span><span class="p">)</span>
+        <span class="n">S_dsqr</span> <span class="o">=</span> <span class="n">dsqr</span><span class="o">*</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Sdash</span><span class="o">*</span><span class="n">Sdash</span> <span class="o">+</span> <span class="n">M</span><span class="o">*</span><span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="n">fv2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">chi</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">chi</span><span class="o">*</span><span class="n">fv1</span><span class="p">)</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Sbar_dsqr</span> <span class="o">=</span> <span class="n">nutilde</span><span class="o">*</span><span class="n">fv2</span><span class="o">/</span><span class="p">(</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">)</span>
+        <span class="n">Stilde_dsqr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">minS</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">S_dsqr</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dde</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">())),</span> <span class="p">(</span><span class="n">S_dsqr</span> <span class="o">+</span> <span class="n">Sbar_dsqr</span><span class="p">))</span>
+        <span class="c1">###################################################</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">nutilde</span><span class="o">/</span><span class="p">(</span><span class="n">Stilde_dsqr</span><span class="o">*</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">tf_Stilde</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="n">cw2</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="n">fw</span> <span class="o">=</span> <span class="n">g</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">cw3</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">g</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">cw3</span><span class="o">**</span><span class="mi">6</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">gn</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1000</span><span class="o">*</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1">##################################################</span>
+        <span class="c1">##################################################</span>
+        <span class="n">sdiff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sig</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">eta</span><span class="o">*</span><span class="p">(</span><span class="n">nutildexx</span> <span class="o">+</span> <span class="n">nutildeyy</span><span class="p">)</span> <span class="o">+</span> <span class="n">etax</span><span class="o">*</span><span class="n">nutildex</span> <span class="o">+</span> <span class="n">etay</span><span class="o">*</span><span class="n">nutildey</span><span class="p">)</span>
+        
+        <span class="n">sp_dsqr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">cb1</span><span class="o">*</span><span class="n">S_dsqr</span><span class="o">*</span><span class="n">nutilde</span><span class="o">*</span><span class="n">gn</span><span class="p">),</span> <span class="p">(</span><span class="n">cb1</span><span class="o">*</span><span class="n">Stilde_dsqr</span><span class="o">*</span><span class="n">nutilde</span><span class="p">))</span>
+        
+        <span class="n">sd_dsqr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">cw1</span><span class="o">*</span><span class="n">nutilde</span><span class="o">*</span><span class="n">nutilde</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="n">cw1</span><span class="o">*</span><span class="n">fw</span><span class="o">*</span><span class="n">nutilde</span><span class="o">*</span><span class="n">nutilde</span><span class="p">))</span>
+        
+        <span class="n">sc</span> <span class="o">=</span> <span class="p">(</span><span class="n">cb2</span><span class="o">/</span><span class="n">sig</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">nutildex</span><span class="o">*</span><span class="n">nutildex</span> <span class="o">+</span> <span class="n">nutildey</span><span class="o">*</span><span class="n">nutildey</span><span class="p">)</span>
+        <span class="c1">#####################################################</span>
+        <span class="c1">#####################################################</span>
+        <span class="n">cont</span>  <span class="o">=</span> <span class="n">Ux</span> <span class="o">+</span> <span class="n">Vy</span>
+        <span class="n">xmom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Ux</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Uy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Pphix</span> <span class="o">-</span> <span class="p">(</span><span class="n">nu</span><span class="o">+</span><span class="n">nut</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Uxx</span> <span class="o">+</span> <span class="n">Uyy</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">nutx</span><span class="o">*</span><span class="n">Ux</span> <span class="o">-</span> <span class="n">nuty</span><span class="o">*</span><span class="p">(</span><span class="n">Uy</span> <span class="o">+</span> <span class="n">Vx</span><span class="p">)</span> <span class="o">-</span> <span class="n">fsu</span> <span class="o">+</span> <span class="n">fp</span>
+        <span class="n">ymom</span>  <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">Vx</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">Vy</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span><span class="o">*</span><span class="n">Pphiy</span> <span class="o">-</span> <span class="p">(</span><span class="n">nu</span><span class="o">+</span><span class="n">nut</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Vxx</span> <span class="o">+</span> <span class="n">Vyy</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">nuty</span><span class="o">*</span><span class="n">Vy</span> <span class="o">-</span> <span class="n">nutx</span><span class="o">*</span><span class="p">(</span><span class="n">Uy</span> <span class="o">+</span> <span class="n">Vx</span><span class="p">)</span> <span class="o">-</span> <span class="n">fsv</span>
+        <span class="n">divfs</span> <span class="o">=</span> <span class="n">fsux</span> <span class="o">+</span> <span class="n">fsvy</span>
+        <span class="n">SA</span>   <span class="o">=</span> <span class="n">dsqr</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">*</span><span class="n">nutildex</span> <span class="o">+</span> <span class="n">V</span><span class="o">*</span><span class="n">nutildey</span> <span class="o">-</span> <span class="n">sdiff</span> <span class="o">-</span> <span class="n">sc</span><span class="p">)</span> <span class="o">-</span> <span class="n">sp_dsqr</span> <span class="o">-</span> <span class="n">sd_dsqr</span>
+        <span class="n">minF</span>  <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fsu</span><span class="o">*</span><span class="n">fsu</span> <span class="o">+</span> <span class="n">fsv</span><span class="o">*</span><span class="n">fsv</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">cont</span><span class="p">,</span> <span class="n">xmom</span><span class="p">,</span> <span class="n">ymom</span><span class="p">,</span> <span class="n">divfs</span><span class="p">,</span> <span class="n">SA</span><span class="p">,</span> <span class="n">minF</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pde</span></div>
+<span class="c1">########################################################################</span>
+<span class="c1">########################################################################</span>
+<span class="k">def</span> <span class="nf">getSATerms</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">dmin</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return function to evaluate teerms in SA model.</span>
+
+<span class="sd">    :param rho: Fluid Density.</span>
+<span class="sd">    :type rho: float</span>
+<span class="sd">    :param nu: Fluid Kinematic Viscosity.</span>
+<span class="sd">    :type nu: float</span>
+<span class="sd">    :param dmin: Minimum value of wall distance for blend function.</span>
+<span class="sd">    :type dmin: float</span>
+<span class="sd">    :return: Operator to calculate production, destruction, diffusion and cross-diffusion terms.</span>
+<span class="sd">    :rtype: func</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cv1</span> <span class="o">=</span> <span class="mf">7.1</span>
+    <span class="n">cv2</span> <span class="o">=</span> <span class="mf">0.7</span>
+    <span class="n">cv3</span> <span class="o">=</span> <span class="mf">0.9</span>
+
+    <span class="n">kep</span> <span class="o">=</span> <span class="mf">0.41</span> 
+
+    <span class="n">cb1</span> <span class="o">=</span> <span class="mf">0.1355</span>
+    <span class="n">cb2</span> <span class="o">=</span> <span class="mf">0.622</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span>
+
+    <span class="n">cw1</span> <span class="o">=</span> <span class="p">(</span><span class="n">cb1</span><span class="o">/</span><span class="p">(</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">cb2</span><span class="p">)</span><span class="o">/</span><span class="n">sig</span>
+    <span class="n">cw2</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">cw3</span> <span class="o">=</span> <span class="mf">2.0</span>
+    <span class="n">rlim</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="mf">1e-5</span>
+
+    <span class="n">ep</span> <span class="o">=</span> <span class="n">dmin</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">dmin</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">0.25</span>
+    <span class="k">def</span> <span class="nf">pde</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">D</span><span class="p">):</span>
+        <span class="n">U</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">V</span>       <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">nutilde</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Ux</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Uy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Vx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">nutildex</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nutildey</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">nutildexx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nutildeyy</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#####################################################</span>
+        <span class="c1">#####################################################</span>
+        <span class="n">dn</span> <span class="o">=</span> <span class="n">D</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">dn</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">dn</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">dn</span><span class="p">))</span><span class="o">*</span><span class="n">ep</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">db</span><span class="p">,</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nutilde</span><span class="p">))</span>
+
+        <span class="n">inv_dsqr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reciprocal_no_nan</span><span class="p">(</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;invertdsqr&quot;</span><span class="p">)</span>
+        <span class="c1">############################</span>
+        <span class="n">chi</span> <span class="o">=</span> <span class="n">nutilde</span><span class="o">/</span><span class="n">nu</span>
+
+        <span class="n">fv1</span> <span class="o">=</span> <span class="p">(</span><span class="n">chi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">chi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">cv1</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">nut</span> <span class="o">=</span> <span class="n">fv1</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nutilde</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dde</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">())),</span> <span class="n">nutilde</span><span class="p">)</span>
+
+        <span class="n">nutx</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">nut</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nuty</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">nut</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">###################################################     </span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">nu</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">chi</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">chi</span><span class="p">))</span>
+
+        <span class="n">etax</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">etay</span> <span class="o">=</span> <span class="n">dde</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">vorZ</span> <span class="o">=</span> <span class="n">Vx</span> <span class="o">-</span> <span class="n">Uy</span>
+        <span class="n">Sdash</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vorZ</span><span class="o">*</span><span class="n">vorZ</span><span class="p">)</span>
+
+        <span class="n">S</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Sdash</span><span class="o">*</span><span class="n">Sdash</span> <span class="o">+</span> <span class="n">M</span><span class="o">*</span><span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="n">M</span>
+
+        <span class="n">fv2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">chi</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">chi</span><span class="o">*</span><span class="n">fv1</span><span class="p">)</span>
+        <span class="c1">####################################################</span>
+        <span class="n">Sbar</span> <span class="o">=</span> <span class="n">nutilde</span><span class="o">*</span><span class="n">inv_dsqr</span><span class="o">*</span><span class="n">fv2</span><span class="o">/</span><span class="p">(</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">)</span>
+        
+        <span class="n">Stilde</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">maximum</span><span class="p">((</span><span class="mf">1e-10</span><span class="p">)</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">S</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dde</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">())),</span> <span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">Sbar</span><span class="p">))</span>
+        <span class="c1">###################################################</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">inv_dsqr</span><span class="o">*</span><span class="n">nutilde</span><span class="o">/</span><span class="p">(</span><span class="n">Stilde</span><span class="o">*</span><span class="n">kep</span><span class="o">*</span><span class="n">kep</span><span class="p">)</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">tf_Stilde</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="n">cw2</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="n">fw</span> <span class="o">=</span> <span class="n">g</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">cw3</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">g</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">cw3</span><span class="o">**</span><span class="mi">6</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
+        <span class="c1">###################################################</span>
+        <span class="n">gn</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1000</span><span class="o">*</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">chi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1">##################################################</span>
+        <span class="c1">##################################################</span>
+        <span class="n">sdiff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sig</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">eta</span><span class="o">*</span><span class="p">(</span><span class="n">nutildexx</span> <span class="o">+</span> <span class="n">nutildeyy</span><span class="p">)</span> <span class="o">+</span> <span class="n">etax</span><span class="o">*</span><span class="n">nutildex</span> <span class="o">+</span> <span class="n">etay</span><span class="o">*</span><span class="n">nutildey</span><span class="p">)</span>
+
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">cb1</span><span class="o">*</span><span class="n">S</span><span class="o">*</span><span class="n">nutilde</span><span class="o">*</span><span class="n">gn</span><span class="p">),</span> <span class="p">(</span><span class="n">cb1</span><span class="o">*</span><span class="n">Stilde</span><span class="o">*</span><span class="n">nutilde</span><span class="p">))</span>
+
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">nutilde</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">cw1</span><span class="o">*</span><span class="p">(</span><span class="n">nutilde</span><span class="o">*</span><span class="n">nutilde</span><span class="p">)</span><span class="o">*</span><span class="n">inv_dsqr</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="n">cw1</span><span class="o">*</span><span class="n">fw</span><span class="o">*</span><span class="p">(</span><span class="n">nutilde</span><span class="o">*</span><span class="n">nutilde</span><span class="p">)</span><span class="o">*</span><span class="n">inv_dsqr</span><span class="p">))</span>
+
+        <span class="n">sc</span> <span class="o">=</span> <span class="p">(</span><span class="n">cb2</span><span class="o">/</span><span class="n">sig</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">nutildex</span><span class="o">*</span><span class="n">nutildex</span> <span class="o">+</span> <span class="n">nutildey</span><span class="o">*</span><span class="n">nutildey</span><span class="p">)</span>
+        <span class="c1">#################################################</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">sp</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">sdiff</span><span class="p">,</span> <span class="n">sc</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pde</span>
+<span class="c1">########################################################################</span>
+<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="k">def</span> <span class="nf">tf_Stilde</span><span class="p">(</span><span class="n">rn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate value of r.</span>
+
+<span class="sd">    :param rn: provisional value of r.</span>
+<span class="sd">    :type rn: numpy or tf.Tensor</span>
+<span class="sd">    :return: Final value of r capped between 0 and 10.</span>
+<span class="sd">    :rtype: numpy or tf.Tensor</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rdash</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rn</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">tf_rlim</span><span class="p">(</span><span class="n">rn</span><span class="p">),</span> <span class="n">rn</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tf_rtrue</span><span class="p">(</span><span class="n">rdash</span><span class="p">)</span>
+
+<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>   
+<span class="k">def</span> <span class="nf">tf_rlim</span><span class="p">(</span><span class="n">rn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return limiting value of r.</span>
+
+<span class="sd">    :param rn: provisional value of r.</span>
+<span class="sd">    :type rn: numpy or tf.Tensor</span>
+<span class="sd">    :return: Maximum value of r (10).</span>
+<span class="sd">    :rtype: numpy or tf.Tensor</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">10.0</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rn</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dde</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">()))</span>
+
+<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="k">def</span> <span class="nf">tf_rtrue</span><span class="p">(</span><span class="n">rn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the minumimum between r and limiting value of r.</span>
+
+<span class="sd">    :param rn: provisional value of r.</span>
+<span class="sd">    :type rn: numpy or tf.Tensor</span>
+<span class="sd">    :return: Minimum value of r between pn and limiting value.</span>
+<span class="sd">    :rtype: numpy or tf.Tensor</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">rn</span><span class="p">,</span><span class="n">tf_rlim</span><span class="p">(</span><span class="n">rn</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">PINN-SA</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Installation Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.BaseFunctions.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.PINNFunctions.html">PINNFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.PINNPlotter.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.PDEBox.html">PDEBox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.CaseBox.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/src.PINNBox.BC.html">BaseFunctions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Yusuf Patel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

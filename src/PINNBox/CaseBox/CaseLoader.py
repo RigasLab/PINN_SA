@@ -7,6 +7,27 @@ from PINNBox.PINNPlotter import plotAllLoss
 from PINNBox.CaseBox.PH.SetupPH import setupPH, getPHPlot
 
 def initCase(case, getAnchor = False, test_path = "Test_A/", other = [], pde_type = "", weights = [1], resolution = '0p5'):
+    """
+    Select the correct case (e.g. Periodic Hill) and generate case: construct domain, select PDE, load data, set weights etc.
+
+    :param case: The case to test(e.g. "PH" for periodic hill
+    :type case: str
+    :param getAnchor: Use predetermined collocation points.
+    :type getAnchor: boolean
+    :param test_path: File path location to save results.
+    :type test_path: str
+    :param other: Additioanal parameters that may be specific to case.
+    :type other: list
+    :param pde_type: The string ID for PDE to load.
+    :type pde_tpe: str
+    :param weights: List of lists containing weights for PDE and BC terms.
+    :type weights: list
+    :param resolution: Resolution to sample training data.
+    :type resolution: str
+    :return: PDE operator to calculate residual of continuity, x-momentum and y-momentum
+    :rtype: func
+
+    """
     if case == "PH":
         base_path = "/Results_PH/"
         [domain, pde, bc, loss_name, loss_weights, transform, func_sol, X_anchor, aux_D] = setupPH(pde_type, other[0], other[1], other[2], getAnchor, weights, resolution)

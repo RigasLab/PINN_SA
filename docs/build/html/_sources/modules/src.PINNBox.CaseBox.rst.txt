@@ -1,0 +1,47 @@
+CaseBox
+========
+This code allows switching between different cases and geometries and generating variable postprocessing
+
+.. _casebox:
+
+General Loader
+---------------
+The main loader is called to load any cases and generate posprocessing functions
+
+.. autofunction:: src.PINNBox.PDEBox.RANS.RANS_B_HD
+
+.. autofunction:: src.PINNBox.CaseBox.CaseLoader.initCase
+
+.. autofunction:: src.PINNBox.CaseBox.CaseLoader.makeDir
+
+.. autofunction:: src.PINNBox.CaseBox.CaseLoader.postProTrain
+
+.. autofunction:: src.PINNBox.CaseBox.CaseLoader.getPlotter
+
+Periodic Hill
+--------------
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.setupPH
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.sol
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.func_D
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.h_c
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genTrainingData
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genBC
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genBC_HD
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genBC_RST_E
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genLosses
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genLosses_HD
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.genLosses_RST_E
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.getPHPlot
+
+.. autofunction:: src.PINNBox.CaseBox.PH.SetupPH.plotter
