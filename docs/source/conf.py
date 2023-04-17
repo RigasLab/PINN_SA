@@ -2,9 +2,7 @@
 # add these directories to sys.path here.
 import pathlib
 import sys
-sys.path
-dirn = 'C:\\Users\\Yusuf\\Source\\Repos\\ysp15\\Oak\\Hawth2'
-sys.path.insert(0, pathlib.Path(dirn).resolve().as_posix())
+sys.path.insert(0, pathlib.Path(__file__).resolve().parents[2].as_posix())
 #sys.path.insert(0, pathlib.Path(dirn).parents[2].resolve().as_posix())
 #sys.path.insert(0, pathlib.Path("././docseee").parents[2].resolve().as_posix())
 # Configuration file for the Sphinx documentation builder.
