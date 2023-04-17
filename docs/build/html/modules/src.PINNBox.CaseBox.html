@@ -41,27 +41,6 @@
 <section id="general-loader">
 <span id="id1"></span><h2>General Loader<a class="headerlink" href="#general-loader" title="Permalink to this heading">¶</a></h2>
 <p>The main loader is called to load any cases and generate posprocessing functions</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="src.PINNBox.PDEBox.RANS.RANS_B_HD">
-<span class="sig-prename descclassname"><span class="pre">src.PINNBox.PDEBox.RANS.</span></span><span class="sig-name descname"><span class="pre">RANS_B_HD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/PINNBox/PDEBox/RANS.html#RANS_B_HD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.PINNBox.PDEBox.RANS.RANS_B_HD" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return PDE for RANS with HD formulation and no turbulence model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>rho</strong> (<em>float</em>) – Fluid Density.</p></li>
-<li><p><strong>nu</strong> (<em>float</em>) – Fluid Kinematic Viscosity.</p></li>
-<li><p><strong>fp</strong> (<em>float</em><em> or </em><em>tf.Variable</em>) – Streamwise Body Forcing.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>PDE operator to calculate residual of continuity, x-momentum, y-momentum and divergence of solenoidal forcing.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>func</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="periodic-hill">
 <h2>Periodic Hill<a class="headerlink" href="#periodic-hill" title="Permalink to this heading">¶</a></h2>

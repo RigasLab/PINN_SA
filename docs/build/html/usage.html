@@ -17,7 +17,7 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="api.html" />
+    <link rel="next" title="Examples - Periodic Hill" href="demos/examples.PH.html" />
     <link rel="prev" title="Welcome to PINN_SA’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -48,35 +48,9 @@
 <h2>Creating recipes<a class="headerlink" href="#creating-recipes" title="Permalink to this heading">¶</a></h2>
 <p>To retrieve a list of random ingredients,
 you can use the <code class="docutils literal notranslate"><span class="pre">lumache.get_random_ingredients()</span></code> function:</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="lumache.get_random_ingredients">
-<span class="sig-prename descclassname"><span class="pre">lumache.</span></span><span class="sig-name descname"><span class="pre">get_random_ingredients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lumache.html#get_random_ingredients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lumache.get_random_ingredients" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of random ingredients as strings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kind</strong> (<em>list</em><em>[</em><em>str</em><em>] or </em><em>None</em>) – Optional “kind” of ingredients.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#lumache.InvalidKindError" title="lumache.InvalidKindError"><strong>lumache.InvalidKindError</strong></a> – If the kind is invalid.</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The ingredients list.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list[str]</p>
-</dd>
-</dl>
-</dd></dl>
-
 <p>The <code class="docutils literal notranslate"><span class="pre">kind</span></code> parameter should be either <code class="docutils literal notranslate"><span class="pre">&quot;meat&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fish&quot;</span></code>,
-or <code class="docutils literal notranslate"><span class="pre">&quot;veggies&quot;</span></code>. Otherwise, <a class="reference internal" href="#lumache.get_random_ingredients" title="lumache.get_random_ingredients"><code class="xref py py-func docutils literal notranslate"><span class="pre">lumache.get_random_ingredients()</span></code></a>
+or <code class="docutils literal notranslate"><span class="pre">&quot;veggies&quot;</span></code>. Otherwise, <code class="xref py py-func docutils literal notranslate"><span class="pre">lumache.get_random_ingredients()</span></code>
 will raise an exception.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="lumache.InvalidKindError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lumache.</span></span><span class="sig-name descname"><span class="pre">InvalidKindError</span></span><a class="reference internal" href="_modules/lumache.html#InvalidKindError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lumache.InvalidKindError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raised if the kind is invalid.</p>
-</dd></dl>
-
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">lumache</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lumache</span><span class="o">.</span><span class="n">get_random_ingredients</span><span class="p">()</span>
 <span class="go">[&#39;shells&#39;, &#39;gorgonzola&#39;, &#39;parsley&#39;]</span>
@@ -110,6 +84,10 @@ will raise an exception.</p>
 </ul>
 </li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Example Cases:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demos/examples.PH.html">Examples - Periodic Hill</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
@@ -117,8 +95,8 @@ will raise an exception.</p>
 <li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNFunctions.html">PINNFunctions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PINNPlotter.html">BaseFunctions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.PDEBox.html">PDEBox</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html">BaseFunctions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BC.html">BaseFunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.CaseBox.html">CaseBox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/src.PINNBox.BC.html">BC</a></li>
 </ul>
 
 <div class="relations">
@@ -126,7 +104,7 @@ will raise an exception.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Welcome to PINN_SA’s documentation!</a></li>
-      <li>Next: <a href="api.html" title="next chapter">API</a></li>
+      <li>Next: <a href="demos/examples.PH.html" title="next chapter">Examples - Periodic Hill</a></li>
   </ul></li>
 </ul>
 </div>

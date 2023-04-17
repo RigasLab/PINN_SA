@@ -8,8 +8,6 @@ General Loader
 ---------------
 The main loader is called to load any cases and generate posprocessing functions
 
-.. autofunction:: src.PINNBox.PDEBox.RANS.RANS_B_HD
-
 .. autofunction:: src.PINNBox.CaseBox.CaseLoader.initCase
 
 .. autofunction:: src.PINNBox.CaseBox.CaseLoader.makeDir

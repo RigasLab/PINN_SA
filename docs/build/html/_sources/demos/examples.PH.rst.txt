@@ -1,5 +1,6 @@
 Examples - Periodic Hill
-=====
+========================
+This is a page to show how to use the code to generate an inverse solver of the problem approached in XXX.
 
 .. _exampPH:
 
