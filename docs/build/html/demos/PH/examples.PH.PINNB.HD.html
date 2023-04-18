@@ -15,6 +15,7 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="PINN-SA with Turbulence Model Augmentation" href="examples.PH.PINNSA.html" />
@@ -37,62 +38,80 @@
             
   <section id="pinn-baseline-with-helmholtz-decomposition-method">
 <h1>PINN-Baseline with Helmholtz Decomposition method<a class="headerlink" href="#pinn-baseline-with-helmholtz-decomposition-method" title="Permalink to this heading">¶</a></h1>
-<section id="functions">
-<span id="basefunc"></span><h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="src.PINNBox.BaseFunctions.func_zeros">
-<span class="sig-prename descclassname"><span class="pre">src.PINNBox.BaseFunctions.</span></span><span class="sig-name descname"><span class="pre">func_zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/src/PINNBox/BaseFunctions.html#func_zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.PINNBox.BaseFunctions.func_zeros" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an array of zeros.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>X</strong> (<em>numpy array</em>) – Coordinates at which zeros are found.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Zeros matching number of points in X.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="src.PINNBox.BaseFunctions.func_const">
-<span class="sig-prename descclassname"><span class="pre">src.PINNBox.BaseFunctions.</span></span><span class="sig-name descname"><span class="pre">func_const</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/src/PINNBox/BaseFunctions.html#func_const"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.PINNBox.BaseFunctions.func_const" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an array of constant values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>float</em>) – Constant value to return.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Function that returns array of constant value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>func</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="src.PINNBox.BaseFunctions.addWeights">
-<span class="sig-prename descclassname"><span class="pre">src.PINNBox.BaseFunctions.</span></span><span class="sig-name descname"><span class="pre">addWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/src/PINNBox/BaseFunctions.html#addWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.PINNBox.BaseFunctions.addWeights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds list of weights to the full list of weights.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>loss_weights</strong> (<em>list</em>) – Current list of weights.</p></li>
-<li><p><strong>weights</strong> (<em>list</em>) – List of weights to append.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Combined list of weights</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
+<section id="problem-setup">
+<h2>Problem Setup<a class="headerlink" href="#problem-setup" title="Permalink to this heading">¶</a></h2>
+<p>We will solve the inverse problem with the Reynolds-Averaged Navier-Stokes (RANS) equations:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial U_{i}}{\partial x_{i}} = 0,\]</div>
+<div class="math notranslate nohighlight">
+\[U_{j}\frac{\partial U_{i}}{\partial x_{j}} + \frac{1}{\rho}\frac{\partial P}{\partial x_{j}} + \frac{\partial (2\nu S_{ij})}{\partial x_{j}} + f_{p,i}.\]</div>
+<p>This will be solved across the Periodic Hill domain at <span class="math notranslate nohighlight">\(Re=5600\)</span>. The full case description can be found in XXX.</p>
+</section>
+<section id="implementaton">
+<h2>Implementaton<a class="headerlink" href="#implementaton" title="Permalink to this heading">¶</a></h2>
+<p>To setup this case we must make the following modifications to the underlying config file from XXX.</p>
+<p>First we must set the case to the periodic hill config and give the test folder a name (<code class="docutils literal notranslate"><span class="pre">RST-E</span></code>)</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;case&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PH&quot;</span><span class="p">,</span>
+<span class="nt">&quot;test_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RST-E&quot;</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>The next step is to define the training setup. This includes number of iterations, neural network architecture.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;iter_list&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10000</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">200000</span><span class="p">],</span>
+<span class="nt">&quot;train_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">],</span>
+<span class="nt">&quot;param&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">5e-4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Glorot uniform&quot;</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>The PDE must be now defined as well as the collocation points over which to evaluate it.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;colloc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hammersley&quot;</span><span class="p">],</span>
+<span class="nt">&quot;PDE&quot;</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RSTE&quot;</span><span class="p">,</span>
+<span class="nt">&quot;fixedfp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.0110</span><span class="p">],</span>
+<span class="nt">&quot;doSA&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">],</span>
+<span class="nt">&quot;hardConstraint&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>Select the weights for the PDE and boundary condition losses.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;weight_pde&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<span class="nt">&quot;weight_reg&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-2</span><span class="p">],</span>
+<span class="nt">&quot;weight_data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span>
+<span class="nt">&quot;weight_wall&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span>
+<span class="nt">&quot;weight_periodic&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<span class="nt">&quot;weight_massflow&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-1</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>To select the data resolution, use the following:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0p5&quot;</span>
+</pre></div>
+</div>
+<p>For RST-E, both mean flow data and Reynolds stress data will be used to train the model.</p>
+</section>
+<section id="complete-config">
+<h2>Complete Config<a class="headerlink" href="#complete-config" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">	</span><span class="nt">&quot;case&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PH&quot;</span><span class="p">,</span>
+<span class="w">	</span><span class="nt">&quot;test_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Template&quot;</span><span class="p">,</span>
+<span class="w">	</span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;v1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;iter_list&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10000</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">200000</span><span class="p">],</span>
+<span class="w">	</span><span class="nt">&quot;train_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;param&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">5e-4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Glorot uniform&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;colloc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hammersley&quot;</span><span class="p">],</span>
+<span class="w">	</span><span class="nt">&quot;PDE&quot;</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;HD&quot;</span><span class="p">,</span>
+<span class="w">	</span><span class="nt">&quot;fixedfp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.0110</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;doSA&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;hardConstraint&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">    </span>
+<span class="w">    </span><span class="nt">&quot;massflow&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;weight_pde&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<span class="w">	</span><span class="nt">&quot;weight_reg&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-2</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;weight_data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;weight_wall&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;weight_periodic&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;weight_massflow&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-1</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;isSol&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;loadModel&quot;</span><span class="p">:[</span><span class="kc">false</span><span class="p">,</span><span class="s2">&quot;***/SavedModel/***.ckpt&quot;</span><span class="p">],</span>
+<span class="w">	</span><span class="nt">&quot;loadColloc&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0p5&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </section>
 </section>
 
