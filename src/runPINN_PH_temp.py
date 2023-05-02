@@ -10,7 +10,10 @@ import json
 #caseLoader.getOutputTransform (get transform)
 #caseLoader.getData - loadData and sample resolution
 
-[pde, netShape] = pde_loader("RANS", testcfg['PDE'], pde_other=[rho,nu,fp,doSA])
+case_load = PHLoader("PH",Re)
+
+case_load.setPDE("RANS",["HD", True])
+
 
 
 

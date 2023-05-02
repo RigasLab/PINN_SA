@@ -30,7 +30,11 @@ class PHLoader(Casebox.CaseLoader):
 
         self.pde_prop = [self.rho, self.nu, self.fp, self.minS]
 
-       
+        self.X_test = []
+        self.Q_test = []
+        self.tau_test = []
+
+        self.data_path = ""
 
 
         #self.domain = 0
@@ -51,5 +55,20 @@ class PHLoader(Casebox.CaseLoader):
             self.fp = self.fp
 
         return
+
+    def loadData(self, data_path):
+        self.data_path = data_path
+
+        removeUpper = True
+
+        refineUpper = {"refine":False,
+                       "res":10,
+                       "x0":0.0}
+        #############################################################
+        [_,_,_,self.X_test,self.Q_test,self.tau_test] = loadQ0(data_path,10,5,refineUpper,removeUpper)
+
+        return
+
+
 
 

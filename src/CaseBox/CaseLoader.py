@@ -17,6 +17,7 @@ class CaseLoader:
 
         self.initGeometry()
 
+        ## Next Steps: generating BC; storing and setting up PINN (architecture,weights,iterations etc)
 
     def initGeometry(self):
         return
@@ -41,4 +42,8 @@ class CaseLoader:
 
     def getPDEName(self):
         return self.pde_store.getPDEName()
+###########################################################
+    def loadData(self):
+        data = []
+        return
 ###########################################################
