@@ -7,8 +7,15 @@ class PHLoader(Casebox.CaseLoader):
         Re,
         rho = 1.0,
         H = 1.0,
-        U = 1.0
+        U = 1.0,
+        fixedfp = True,
+        fp = -0.0110,
+        minS = 1e-10
         ):
+
+        super(PHLoader, self).__init__(
+            case
+            )
 
         self.Re = Re
         self.rho = rho
@@ -16,42 +23,33 @@ class PHLoader(Casebox.CaseLoader):
         self.H = H
         self.nu = U*H/Re
 
-        self.initGeometry()
+        self.fp = fp
+        self.initfp(fixedfp)
+
+        self.minS = minS
+
+        self.pde_prop = [self.rho, self.nu, self.fp, self.minS]
+
+       
 
 
-        self.domain = []
-        self.bc_list = []
-        self.bc_name = []
-        self.pde = []
-        self.pde_name = []
-        self.data = []
-        self.netShape = []
+        #self.domain = 0
+        #self.bc_list = []
+        #self.bc_name = []
+        #self.data = 0
+        #self.pde_store = 0
 
-
+###########################################
     def initGeometry(self):
         self.domain = PHXDEGeometryBase()
 
         return
 
-    def setPDE(self, type, SA):
-        if (doSA):
-            if (type == "RST-E"):
-                print("RST-E with SA not configured")
-                self.netShape = [2,7]
-                quit()   
-            elif (type == "HD"):          
-                self.pde = RANS_SA_HD(self.rho,self.nu,self.minS,self.fp)
-                self.netShape = [2,6]
-        else:
-            if (type == "RST-E"):
-                pde = RANS_B_RSTE(rho,nu,fp)
-                self.netShape = [2,6]
-            elif (type == "HD"):          
-                pde = RANS_B_HD(rho,nu,fp)
-                self.netShape = [2,5]
+    def initfp(self,fix):
+        if (fix == False):
+            #self.fp = dde.Variable(self.fp, dtype=dde.config.default_float())
+            self.fp = self.fp
 
-    def getNetShape(self):
-        return self.netShape
+        return
 
-    def getPDE(self):
-        return self.pde
+

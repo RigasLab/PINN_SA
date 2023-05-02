@@ -1,23 +1,44 @@
+from PDEBox.PDELoader import PDELoader
 
 class CaseLoader:
     def __init__(
         self,
         case):
 
-        self.geometry = []
+        self.case = case
+
+        self.domain = 0
         self.bc_list = []
         self.bc_name = []
-        self.pde = []
-        self.pde_name = []
-        self.data = []
-        self.netShape = []
+        self.data = 0
+
+        self.pde_store = 0
+        self.pde_prop = []
+
+        self.initGeometry()
 
 
     def initGeometry(self):
         return
 
-    def getNetShape(self):
-        return self.netShape
+    def setPDE(self, pde_type, pde_id):
+        
+        self.pde_store = PDELoader(pde_type, pde_id)
+        self.pde_store.setPDE(self.pde_prop)
 
+        return
+
+    def genBC(self):
+        self.bc_list = []
+        return
+
+##########################################################
     def getPDE(self):
-        return self.pde
+        return self.pde_store.getPDE()
+
+    def getNetShape(self):
+        return self.pde_store.getNetShape()
+
+    def getPDEName(self):
+        return self.pde_store.getPDEName()
+###########################################################
